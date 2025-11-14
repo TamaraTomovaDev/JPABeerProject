@@ -38,6 +38,29 @@ public class BeerRepository {
             em.remove(beer);
         }
         em.getTransaction().commit();
+    }
 
+    // findBeersByCategory(long categoryId)
+    public List<Beer> findBeersByCategory(EntityManager em, int categoryId) {
+        return em.createQuery(
+                "SELECT b FROM Beer b WHERE b.category.id = :categoryId", Beer.class)
+                .setParameter("categoryId", categoryId)
+                .getResultList();
+    }
+
+    // findBeersByBrewer(long brewerId)
+    public List<Beer> findAllBeersByBrewer(EntityManager em, int brewerId) {
+        return em.createQuery(
+                "SELECT b FROM Beer b WHERE b.brewer.id = :brewerId", Beer.class)
+                .setParameter("brewerId", brewerId)
+                .getResultList();
+    }
+
+    // findBeersCheaperThan(double maxPrice)
+    public List<Beer> findBeersCheaperThan(EntityManager em, double maxPrice) {
+        return em.createQuery(
+                "SELECT b FROM Beer b WHERE b.price < :maxPrice", Beer.class)
+                .setParameter("maxPrice", maxPrice)
+                .getResultList();
     }
 }

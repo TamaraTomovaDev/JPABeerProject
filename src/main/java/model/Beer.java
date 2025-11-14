@@ -87,8 +87,8 @@ public class Beer {
                 ", name='" + name + '\'' +
                 ", alcoholPercentage=" + alcoholPercentage +
                 ", price=" + price +
-                ", brewer=" + brewer +
-                ", category=" + category +
+                ", brewer=" + (brewer != null ? brewer.getName() : "null") +
+                ", category=" + (category != null ? category.getName() : "null") +
                 '}';
     }
 }

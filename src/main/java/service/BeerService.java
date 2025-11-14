@@ -41,4 +41,26 @@ public class BeerService {
         beerRepository.deleteBeer(em, id);
         em.close();
     }
+
+    public List<Beer> findBeersByCategory(int categoryId) {
+        EntityManager em = JpaConfig.getEntityManager();
+        List<Beer> beers = beerRepository.findBeersByCategory(em, categoryId);
+        em.close();
+        return beers;
+    }
+
+    public List<Beer> findBeersByBrewer(int brewerID) {
+        EntityManager em = JpaConfig.getEntityManager();
+        List<Beer> beers = beerRepository.findBeersByCategory(em, brewerID);
+        em.close();
+        return beers;
+    }
+
+    public List<Beer> findBeersCheaperThan(double maxPrice) {
+        EntityManager em = JpaConfig.getEntityManager();
+        List<Beer> beers = beerRepository.findBeersCheaperThan(em, maxPrice);
+        em.close();
+        return beers;
+    }
+
 }

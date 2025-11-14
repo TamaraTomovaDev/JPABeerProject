@@ -64,7 +64,7 @@ public class Brewer {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", location='" + location + '\'' +
-                ", beers=" + beers +
+                ", beersCount=" + (beers != null ? beers.size() : 0) +
                 '}';
     }
 }

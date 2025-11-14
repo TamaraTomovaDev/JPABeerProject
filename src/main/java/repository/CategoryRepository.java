@@ -39,4 +39,12 @@ public class CategoryRepository {
         }
         em.getTransaction().commit();
     }
+
+    // findCategoryByName(String name)
+    public Category findCategoryByName(EntityManager em, String name) {
+        return em.createQuery(
+                "SELECT c FROM Category c WHERE c.name = :name", Category.class)
+                .setParameter("name", name)
+                .getSingleResult();
+    }
 }

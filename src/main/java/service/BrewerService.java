@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManager;
 import model.Brewer;
 import repository.BrewerRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class BrewerService {
@@ -40,5 +41,19 @@ public class BrewerService {
         EntityManager em = JpaConfig.getEntityManager();
         brewerRepository.deleteBrewer(em, id);
         em.close();
+    }
+
+    public Brewer findBrewerByName(String name) {
+        EntityManager em = JpaConfig.getEntityManager();
+        Brewer brewer = brewerRepository.findBrewerByName(em, name);
+        em.close();
+        return brewer;
+    }
+
+    public List<Object[]> findAllBrewersWithBeerCount(){
+        EntityManager em = JpaConfig.getEntityManager();
+        List<Object[]> result = brewerRepository.findBrewerWithBeerCount(em);
+        em.close();
+        return result;
     }
 }
