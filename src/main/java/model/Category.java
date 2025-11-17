@@ -63,7 +63,7 @@ public class Category {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
-                ", beers=" + beers +
+                ", beersCount=" + (beers != null ? beers.size() : 0) +
                 '}';
     }
 }

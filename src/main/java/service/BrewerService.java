@@ -1,59 +1,87 @@
 package service;
 
-import config.JpaConfig;
-import jakarta.persistence.EntityManager;
 import model.Brewer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import repository.BrewerRepository;
+import util.JpaExecutor;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class BrewerService {
-    BrewerRepository brewerRepository = new BrewerRepository();
+    private static final Logger logger = LoggerFactory.getLogger(BrewerService.class);
+    private final BrewerRepository brewerRepository = new BrewerRepository();
 
+    // Validatie voor Brewer-object
+    private void validateBrewer(Brewer brewer) {
+        if (brewer.getName() == null || brewer.getName().isBlank()) {
+            throw new IllegalArgumentException("Brewer name cannot be empty");
+        }
+        if (brewer.getLocation() == null || brewer.getLocation().isBlank()) {
+            throw new IllegalArgumentException("Brewer location cannot be empty");
+        }
+    }
+
+    // Slaat een nieuwe brouwer op
     public void saveBrewer(Brewer brewer) {
-        EntityManager em = JpaConfig.getEntityManager();
-        brewerRepository.createBrewer(em, brewer);
-        em.close();
+        validateBrewer(brewer);
+        logger.info("Saving brewer: {}", brewer.getName());
+
+        JpaExecutor.execute(em -> {
+            brewerRepository.create(em, brewer); // BaseRepository doet transacties
+            logger.info("Brewer saved successfully: {}", brewer.getName());
+            return null;
+        });
     }
 
+    // Haalt een brouwer op via ID
     public Brewer findBrewerById(int id) {
-        EntityManager em = JpaConfig.getEntityManager();
-        Brewer brewer = brewerRepository.findBrewerById(em, id);
-        em.close();
-        return brewer;
+        return JpaExecutor.execute(em -> brewerRepository.findById(em, id));
     }
 
-    public List<Brewer> findAllBreewers() {
-        EntityManager em = JpaConfig.getEntityManager();
-        List<Brewer> brewers = brewerRepository.findAllBrewers(em);
-        em.close();
-        return brewers;
+    // Haalt alle brouwers op
+    public List<Brewer> findAllBrewers() {
+        return JpaExecutor.execute(em -> brewerRepository.findAll(em));
     }
 
+    // Update een bestaande brouwer
     public void updateBrewer(Brewer brewer) {
-        EntityManager em = JpaConfig.getEntityManager();
-        brewerRepository.updateBrewer(em, brewer);
-        em.close();
+        validateBrewer(brewer);
+        JpaExecutor.execute(em -> {
+            Brewer existing = brewerRepository.findById(em, brewer.getId());
+            if (existing == null) {
+                throw new IllegalArgumentException("Brewer with id " + brewer.getId() + " not found");
+            }
+            brewerRepository.update(em, brewer); // BaseRepository doet transacties
+            logger.info("Brewer updated: {}", brewer.getName());
+            return null;
+        });
     }
 
+    // Verwijdert een brouwer op basis van ID
     public void deleteBrewer(int id) {
-        EntityManager em = JpaConfig.getEntityManager();
-        brewerRepository.deleteBrewer(em, id);
-        em.close();
+        JpaExecutor.execute(em -> {
+            Brewer brewer = brewerRepository.findById(em, id);
+            if (brewer == null) {
+                throw new IllegalArgumentException("Brewer with id " + id + " not found");
+            }
+            // Extra check: heeft de brouwer bieren?
+            if (brewer.getBeers() != null && !brewer.getBeers().isEmpty()) {
+                throw new IllegalArgumentException("Cannot delete brewer with beers assigned");
+            }
+            brewerRepository.delete(em, id); // BaseRepository doet transacties
+            logger.info("Brewer deleted: {}", brewer.getName());
+            return null;
+        });
     }
 
+    // Zoekt een brouwer op naam
     public Brewer findBrewerByName(String name) {
-        EntityManager em = JpaConfig.getEntityManager();
-        Brewer brewer = brewerRepository.findBrewerByName(em, name);
-        em.close();
-        return brewer;
+        return JpaExecutor.execute(em -> brewerRepository.findBrewerByName(em, name));
     }
 
-    public List<Object[]> findAllBrewersWithBeerCount(){
-        EntityManager em = JpaConfig.getEntityManager();
-        List<Object[]> result = brewerRepository.findBrewerWithBeerCount(em);
-        em.close();
-        return result;
+    // Haalt alle brouwers op met het aantal bieren
+    public List<Object[]> findAllBrewersWithBeerCount() {
+        return JpaExecutor.execute(em -> brewerRepository.findBrewerWithBeerCount(em));
     }
 }

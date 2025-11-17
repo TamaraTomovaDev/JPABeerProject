@@ -13,12 +13,12 @@ public class Beer {
     private double alcoholPercentage;
     private double price;
 
-    @ManyToOne
-    @JoinColumn(name = "brewerId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "brewerId", nullable = false)
     private Brewer brewer;
 
-    @ManyToOne
-    @JoinColumn(name = "categoryId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "categoryId", nullable = false)
     private Category category;
 
     public Beer() {
