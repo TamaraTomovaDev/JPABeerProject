@@ -12,9 +12,7 @@ public abstract class BaseRepository<T> {
     }
 
     public void create(EntityManager em, T entity) {
-        em.getTransaction().begin();
         em.persist(entity);
-        em.getTransaction().commit();
     }
 
     public T findById(EntityManager em, int id) {
@@ -27,16 +25,23 @@ public abstract class BaseRepository<T> {
     }
 
     public void update(EntityManager em, T entity) {
-        em.getTransaction().begin();
         em.merge(entity);
-        em.getTransaction().commit();
     }
 
     public void delete(EntityManager em, int id) {
-        em.getTransaction().begin();
         T entity = em.find(entityClass, id);
         if(entity != null)
             em.remove(entity);
-        em.getTransaction().commit();
+    }
+
+    // Batch insert
+    public void batchInsert(EntityManager em, List<T> entities, int batchSize) {
+        for (int i = 0; i < entities.size(); i++) {
+            em.persist(entities.get(i));
+            if (i % batchSize == 0) {
+                em.flush();
+                em.clear();
+            }
+        }
     }
 }

@@ -1,40 +1,37 @@
 package app;
 
-import config.JpaConfig;
-import model.Beer;
-import model.Brewer;
-import model.Category;
-import service.BeerService;
-import service.BrewerService;
-import service.CategoryService;
 
-import java.util.ArrayList;
-import java.util.List;
+import menus.BeerMenu;
+import menus.BrewerMenu;
+import menus.CategoryMenu;
+
+import java.util.Scanner;
 
 public class MainApp {
     public static void main(String[] args) {
-        BrewerService brewerService = new BrewerService();
-        CategoryService categoryService = new CategoryService();
-        BeerService beerService = new BeerService();
+        Scanner sc = new Scanner(System.in);
+        BeerMenu beerMenu = new BeerMenu();
+        BrewerMenu brewerMenu = new BrewerMenu();
+        CategoryMenu categoryMenu = new CategoryMenu();
 
-        // 1. Maak een Brewer
-        Brewer brewer = new Brewer("Duvel Moortgat", "Breendonk", new ArrayList<>());
-        brewerService.saveBrewer(brewer);
+        while (true) {
+            System.out.println("Menu");
+            System.out.println("1. Manage Brewers");
+            System.out.println("2. Manage Beers");
+            System.out.println("3. Manage Category");
+            System.out.println("0. Exit");
+            int  choice = Integer.parseInt(sc.nextLine());
 
-        // 2. Maak een Category
-        Category category = new Category("Blond", "Licht blond bier", new ArrayList<>());
-        categoryService.saveCategory(category);
-
-        // 3. Maak een Beer en koppel Brewer + Category
-        Beer beer = new Beer("Duvel", 8.5, 2.5, brewer, category);
-        beerService.saveBeer(beer);
-
-        // 4. Haal alle bieren op
-        List<Beer> beers = beerService.findAllBeers();
-        System.out.println("Alle bieren in database:");
-        beers.forEach(System.out::println);
-
-        // Sluit EntityManagerFactory
-        JpaConfig.close();
+            switch (choice) {
+                case 1 -> brewerMenu.showMenu();
+                case 2 -> beerMenu.showMenu();
+                case 3 -> categoryMenu.showMenu();
+                case 0 -> {
+                    System.out.println("Programma afgesloten.");
+                    return;
+                }
+                default -> System.out.println("Ongeldige keuze!");
+            }
+        }
     }
 }

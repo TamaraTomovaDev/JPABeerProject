@@ -26,77 +26,82 @@ public class BeerService {
     // Validatie voor Beer-object
     private void validateBeer(Beer beer) {
         if (beer.getName() == null || beer.getName().isBlank()) {
-            throw new IllegalArgumentException("Beer name cannot be empty");
+            throw new IllegalArgumentException("Naam van het bier mag niet leeg zijn");
         }
         if (beer.getPrice() <= 0) {
-            throw new IllegalArgumentException("Price must be greater than zero");
+            throw new IllegalArgumentException("Prijs moet groter zijn dan 0");
         }
         if (beer.getAlcoholPercentage() < 0) {
-            throw new IllegalArgumentException("Alcohol percentage cannot be negative");
+            throw new IllegalArgumentException("Alcoholpercentage mag niet negatief zijn");
         }
         if (beer.getBrewer() == null) {
-            throw new IllegalArgumentException("Brewer must be specified");
+            throw new IllegalArgumentException("Brouwer moet gespecificeerd zijn");
         }
         if (beer.getCategory() == null) {
-            throw new IllegalArgumentException("Category must be specified");
+            throw new IllegalArgumentException("Categorie moet gespecificeerd zijn");
         }
     }
 
     // Nieuw bier opslaan
     public void saveBeer(Beer beer) {
         validateBeer(beer);
-        logger.info("Saving Beer: {}", beer.getName());
 
-        JpaExecutor.execute(em -> {
+        JpaExecutor.executeWrite(em -> {
             Brewer brewer = brewerRepository.findById(em, beer.getBrewer().getId());
             Category category = categoryRepository.findById(em, beer.getCategory().getId());
+
             if (brewer == null || category == null) {
-                throw new IllegalArgumentException("Brewer or category does not exist");
+                throw new IllegalArgumentException("Brouwer of categorie bestaat niet.");
             }
 
-            boolean duplicate = beerRepository.findAllBeersByBrewer(em, brewer.getId())
-                    .stream()
-                    .anyMatch(b -> b.getName().equalsIgnoreCase(beer.getName()));
-            if (duplicate) {
-                throw new IllegalArgumentException("Beer with same name already exists for this brewer");
+            // Duplicate-check via repository
+            if (beerRepository.existsByNameAndBrewer(em, beer.getName(), brewer.getId())) {
+                throw new IllegalArgumentException("Bier met dezelfde naam bestaat al voor deze brouwer");
             }
 
-            beerRepository.create(em, beer); // BaseRepository doet transacties
-            logger.info("Beer saved successfully: {}", beer.getName());
+            beerRepository.create(em, beer);
+            logger.info("Bier opgeslagen: {}", beer.getName());
             return null;
         });
     }
 
     // Haalt een bier op via id
     public Beer findBeerById(int id) {
-        return JpaExecutor.execute(em -> beerRepository.findById(em, id));
+        return JpaExecutor.executeRead(em -> beerRepository.findById(em, id));
     }
 
     // Haalt alle bieren op
     public List<Beer> findAllBeers() {
-        return JpaExecutor.execute(em -> beerRepository.findAll(em));
+        return JpaExecutor.executeRead(em -> beerRepository.findAll(em));
     }
 
     // Update een bestaand bier
     public void updateBeer(Beer beer) {
         validateBeer(beer);
-        JpaExecutor.execute(em -> {
+        JpaExecutor.executeWrite(em -> {
             Beer existing = beerRepository.findById(em, beer.getId());
             if (existing == null) {
-                throw new IllegalArgumentException("Beer with id " + beer.getId() + " not found");
+                throw new IllegalArgumentException("Bier met id " + beer.getId() + " niet gevonden");
             }
-            beerRepository.update(em, beer); // BaseRepository doet transacties
-            logger.info("Beer updated: {}", beer.getName());
+
+            // Optional: duplicate-check bij update
+            if (!existing.getName().equalsIgnoreCase(beer.getName()) &&
+                    beerRepository.existsByNameAndBrewer(em, beer.getName(), beer.getBrewer().getId())) {
+                throw new IllegalArgumentException("Bier met dezelfde naam bestaat al voor deze brouwer");
+            }
+
+            beerRepository.update(em, beer);
+            logger.info("Bier geüpdatet: {}", beer.getName());
             return null;
         });
     }
 
     // Verwijder een bier op basis van Id
     public void deleteBeer(int id) {
-        JpaExecutor.execute(em -> {
+        JpaExecutor.executeWrite(em -> {
             Beer beer = beerRepository.findById(em, id);
             if (beer == null) {
-                throw new IllegalArgumentException("Beer with id " + id + " not found");
+                throw new IllegalArgumentException("Bier met id " + id + " niet gevonden");
             }
             beerRepository.delete(em, id); // BaseRepository doet transacties
             logger.info("Beer deleted: {}", id);
@@ -106,20 +111,21 @@ public class BeerService {
 
     // Haalt alle bieren op van een bepaalde categorie
     public List<Beer> findBeersByCategory(int categoryId) {
-        return JpaExecutor.execute(em -> beerRepository.findBeersByCategory(em, categoryId));
+        return JpaExecutor.executeRead(em -> beerRepository.findBeersByCategory(em, categoryId));
     }
 
     // Haalt alle bieren op van een bepaalde brouwer
     public List<Beer> findBeersByBrewer(int brewerID) {
-        return JpaExecutor.execute(em -> beerRepository.findAllBeersByBrewer(em, brewerID));
+        return JpaExecutor.executeRead(em -> beerRepository.findBeersByBrewer(em, brewerID));
     }
 
     // Haalt alle bieren op die goedkoper zijn dan een bepaalde prijs
     public List<Beer> findBeersCheaperThan(double maxPrice) {
-        return JpaExecutor.execute(em -> beerRepository.findBeersCheaperThan(em, maxPrice));
+        return JpaExecutor.executeRead(em -> beerRepository.findBeersCheaperThan(em, maxPrice));
     }
 
-    // Exporteert alle bieren naar een JSON-bestand.
+
+    // Export naar JSON (met DTO om lazy loading te vermijden)
     public void exportBeersToJson(String filePath) {
         List<Beer> beers = findAllBeers();
         ObjectMapper mapper = new ObjectMapper();
@@ -132,13 +138,16 @@ public class BeerService {
         }
     }
 
-    // Importeert bieren vanuit een JSON-bestand en slaat ze op in de database.
+    // Import vanuit JSON (batch voor performance)
     public void importBeersFromJson(String filePath) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             Beer[] beers = mapper.readValue(new File(filePath), Beer[].class);
-            Arrays.stream(beers).forEach(this::saveBeer); // valideert en slaat op
-            logger.info("Imported {} beers from JSON file: {}", beers.length, filePath);
+            JpaExecutor.executeWrite(em -> {
+                beerRepository.batchInsert(em, Arrays.asList(beers), 20);
+                logger.info("Imported {} beers from JSON file: {}", beers.length, filePath);
+                return null;
+            });
         } catch (IOException e) {
             logger.error("Error importing beers from JSON: {}", e.getMessage(), e);
             throw new RuntimeException("Error importing beers from JSON", e);
