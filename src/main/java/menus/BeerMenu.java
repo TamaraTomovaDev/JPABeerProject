@@ -1,12 +1,33 @@
 package menus;
 
 import controller.BeerController;
+import menus.commands.Command;
+import menus.commands.beer.*;
+import util.InputUtil;
 
-import java.util.Scanner;
+import java.util.Map;
 
 public class BeerMenu {
-    private final BeerController beerController = new BeerController();
-    private final Scanner sc = new Scanner(System.in);
+    private final Map<Integer, Command> commands;
+    private final InputUtil inputUtil;
+
+    // Constructor met dependency injection voor InputUtil
+    public BeerMenu(BeerController controller, InputUtil inputUtil) {
+        this.inputUtil = inputUtil;
+        this.commands = Map.of(
+                1, new AddBeerCommand(controller),
+                2, new ViewAllBeersCommand(controller),
+                3, new FindBeerByIdCommand(controller),
+                4, new UpdateBeerCommand(controller),
+                5, new DeleteBeerCommand(controller),
+                6, new FindBeersByCategoryCommand(controller),
+                7, new FindBeersByBrewerCommand(controller),
+                8, new FindBeersCheaperThanCommand(controller));
+    }
+
+    public Map<Integer, Command> getCommands() {
+        return commands;
+    }
 
     public void showMenu() {
         while (true) {
@@ -20,21 +41,13 @@ public class BeerMenu {
             System.out.println("7. Find Beers by Brewer");
             System.out.println("8. Find Beers cheaper than X");
             System.out.println("0. Back");
-            System.out.print("Choose: ");
-            int choice = Integer.parseInt(sc.nextLine());
 
-            switch (choice) {
-                case 1 -> beerController.addBeer();
-                case 2 -> beerController.viewAllBeers();
-                case 3 -> beerController.findBeerById();
-                case 4 -> beerController.updateBeer();
-                case 5 -> beerController.deleteBeer();
-                case 6 -> beerController.findBeersByCategory();
-                case 7 -> beerController.findBeersByBrewer();
-                case 8 -> beerController.findBeersCheaperThan();
-                case 0 -> { return; }
-                default -> System.out.println("Ongeldige keuze!");
-            }
+            int choice = inputUtil.readInt("Uw keuze: ");
+            if (choice == 0) return;
+
+            Command cmd = commands.get(choice);
+            if (cmd != null) cmd.execute();
+            else System.out.println("Ongeldige keuze!");
         }
     }
 }

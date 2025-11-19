@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Duvel",
+    "alcoholPercentage": 8.5,
+    "price": 2.8,
+    "brewerId": 1,
+    "categoryId": 2
+  },
+  {
+    "name": "Leffe Blond",
+    "alcoholPercentage": 6.6,
+    "price": 2.5,
+    "brewerId": 2,
+    "categoryId": 2
+  },
+  {
+    "name": "Chimay Blue",
+    "alcoholPercentage": 9.0,
+    "price": 3.2,
+    "brewerId": 3,
+    "categoryId": 3
+  }
+]

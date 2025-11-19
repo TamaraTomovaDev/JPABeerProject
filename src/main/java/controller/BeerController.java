@@ -4,25 +4,25 @@ import model.Beer;
 import model.Brewer;
 import model.Category;
 import service.BeerService;
+import util.InputUtil;
 
 import java.util.List;
-import java.util.Scanner;
 
 public class BeerController {
     private final BeerService beerService = new BeerService();
-    private final Scanner sc = new Scanner(System.in);
+    private final InputUtil inputUtil;
+
+    // Constructor
+    public BeerController(InputUtil inputUtil) {
+        this.inputUtil = inputUtil;
+    }
 
     public void addBeer() {
-        System.out.print("Naam: ");
-        String name = sc.nextLine();
-        System.out.print("Alcoholpercentage: ");
-        double alcohol = Double.parseDouble(sc.nextLine());
-        System.out.print("Prijs: ");
-        double price = Double.parseDouble(sc.nextLine());
-        System.out.print("Brewer ID: ");
-        int brewerId = Integer.parseInt(sc.nextLine());
-        System.out.print("Category ID: ");
-        int categoryId = Integer.parseInt(sc.nextLine());
+        String name = inputUtil.readString("Naam: ");
+        double alcohol = inputUtil.readDouble("Alcoholpercentage: ");
+        double price = inputUtil.readDouble("Prijs: ");
+        int brewerId = inputUtil.readInt("Brewer ID: ");
+        int categoryId = inputUtil.readInt("Category ID: ");
 
         Beer beer = new Beer(name, alcohol, price, new Brewer(brewerId), new Category(categoryId));
         try {
@@ -33,32 +33,24 @@ public class BeerController {
         }
     }
 
-    public void viewAllBeers() {
-        List<Beer> beers = beerService.findAllBeers();
-        beers.forEach(System.out::println);
-    }
-
+    // De rest van de methods aanpassen op dezelfde manier
     public void findBeerById() {
-        System.out.print("ID: ");
-        int id = Integer.parseInt(sc.nextLine());
+        int id = inputUtil.readInt("ID: ");
         Beer beer = beerService.findBeerById(id);
-        System.out.println(beer != null ? beer : "Niet gevonden");
+        System.out.println(beer != null ? beer : "Geen bier gevonden met ID " + id);
     }
 
     public void updateBeer() {
-        System.out.print("ID van bier: ");
-        int id = Integer.parseInt(sc.nextLine());
+        int id = inputUtil.readInt("ID van bier: ");
         Beer existing = beerService.findBeerById(id);
         if (existing == null) {
             System.out.println("Bier niet gevonden!");
             return;
         }
-        System.out.print("Nieuwe naam: ");
-        String name = sc.nextLine();
-        System.out.print("Nieuw alcoholpercentage: ");
-        double alcohol = Double.parseDouble(sc.nextLine());
-        System.out.print("Nieuwe prijs: ");
-        double price = Double.parseDouble(sc.nextLine());
+
+        String name = inputUtil.readString("Nieuwe naam: ");
+        double alcohol = inputUtil.readDouble("Nieuw alcoholpercentage: ");
+        double price = inputUtil.readDouble("Nieuwe prijs: ");
 
         existing.setName(name);
         existing.setAlcoholPercentage(alcohol);
@@ -73,8 +65,7 @@ public class BeerController {
     }
 
     public void deleteBeer() {
-        System.out.print("ID: ");
-        int id = Integer.parseInt(sc.nextLine());
+        int id = inputUtil.readInt("ID: ");
         try {
             beerService.deleteBeer(id);
             System.out.println("Bier verwijderd!");
@@ -84,20 +75,34 @@ public class BeerController {
     }
 
     public void findBeersByCategory() {
-        System.out.print("Category ID: ");
-        int categoryId = Integer.parseInt(sc.nextLine());
+        int categoryId = inputUtil.readInt("Category ID: ");
         beerService.findBeersByCategory(categoryId).forEach(System.out::println);
     }
 
     public void findBeersByBrewer() {
-        System.out.print("Brewer ID: ");
-        int brewerId = Integer.parseInt(sc.nextLine());
+        int brewerId = inputUtil.readInt("Brewer ID: ");
         beerService.findBeersByBrewer(brewerId).forEach(System.out::println);
     }
 
     public void findBeersCheaperThan() {
-        System.out.print("Max prijs: ");
-        double price = Double.parseDouble(sc.nextLine());
+        double price = inputUtil.readDouble("Max prijs: ");
         beerService.findBeersCheaperThan(price).forEach(System.out::println);
+    }
+
+    public void viewAllBeers() {
+        List<Beer> beers = beerService.findAllBeers();
+        if (beers.isEmpty()) {
+            System.out.println("Geen bieren gevonden.");
+        } else {
+            beers.forEach(System.out::println);
+        }
+    }
+
+    public void exportBeers() {
+        beerService.exportBeersToJson();
+    }
+
+    public void importBeers() {
+        beerService.importBeersFromJson();
     }
 }

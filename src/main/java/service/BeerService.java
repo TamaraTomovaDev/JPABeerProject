@@ -1,6 +1,7 @@
 package service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dto.BeerDTO;
 import model.Beer;
 import model.Brewer;
 import model.Category;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import repository.BeerRepository;
 import repository.BrewerRepository;
 import repository.CategoryRepository;
+import util.ConfigUtil;
 import util.JpaExecutor;
 
 import java.io.File;
@@ -18,6 +20,7 @@ import java.util.List;
 
 public class BeerService {
     private static final Logger logger = LoggerFactory.getLogger(BeerService.class);
+    private static final String DEFAULT_JSON_PATH = ConfigUtil.getProperty("json.path");
 
     private final BeerRepository beerRepository = new BeerRepository();
     private final CategoryRepository categoryRepository = new CategoryRepository();
@@ -125,31 +128,41 @@ public class BeerService {
     }
 
 
-    // Export naar JSON (met DTO om lazy loading te vermijden)
+    // Export naar JSON
+    public void exportBeersToJson() {
+        exportBeersToJson(DEFAULT_JSON_PATH);
+    }
+
     public void exportBeersToJson(String filePath) {
         List<Beer> beers = findAllBeers();
+        List<BeerDTO> beerDTOs = BeerDTO.fromEntityList(beers);
         ObjectMapper mapper = new ObjectMapper();
         try {
-            mapper.writerWithDefaultPrettyPrinter().writeValue(new File(filePath), beers);
-            logger.info("Exported {} beers to JSON file: {}", beers.size(), filePath);
+            mapper.writerWithDefaultPrettyPrinter().writeValue(new File(filePath), beerDTOs);
+            logger.info("Exported {} beers to JSON file: {}", beerDTOs.size(), filePath);
         } catch (IOException e) {
-            logger.error("Error exporting beers to JSON: {}", e.getMessage(), e);
             throw new RuntimeException("Error exporting beers to JSON", e);
         }
     }
 
-    // Import vanuit JSON (batch voor performance)
+    // Import vanuit JSON
+    public void importBeersFromJson() {
+        importBeersFromJson(DEFAULT_JSON_PATH);
+    }
+
     public void importBeersFromJson(String filePath) {
         ObjectMapper mapper = new ObjectMapper();
         try {
-            Beer[] beers = mapper.readValue(new File(filePath), Beer[].class);
+            BeerDTO[] beerDTOs = mapper.readValue(new File(filePath), BeerDTO[].class);
             JpaExecutor.executeWrite(em -> {
-                beerRepository.batchInsert(em, Arrays.asList(beers), 20);
-                logger.info("Imported {} beers from JSON file: {}", beers.length, filePath);
+                List<Brewer> brewers = brewerRepository.findAll(em);
+                List<Category> categories = categoryRepository.findAll(em);
+                List<Beer> beers = BeerDTO.toEntityList(Arrays.asList(beerDTOs), brewers, categories);
+                beers.forEach(this::validateBeer);
+                beerRepository.batchInsert(em, beers, 20);
                 return null;
             });
         } catch (IOException e) {
-            logger.error("Error importing beers from JSON: {}", e.getMessage(), e);
             throw new RuntimeException("Error importing beers from JSON", e);
         }
     }

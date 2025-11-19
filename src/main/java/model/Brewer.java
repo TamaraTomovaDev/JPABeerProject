@@ -20,6 +20,10 @@ public class Brewer {
     public Brewer() {
     }
 
+    public Brewer(int id) {
+        this.id = id;
+    }
+
     public Brewer(String name, String location, List<Beer> beers) {
         this.name = name;
         this.location = location;

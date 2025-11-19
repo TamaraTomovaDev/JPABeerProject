@@ -27,6 +27,10 @@ public class BrewerService {
         validateBrewer(brewer);
 
         JpaExecutor.executeWrite(em -> {
+            if (brewerRepository.findBrewerByName(em, brewer.getName()) != null) {
+                throw new IllegalArgumentException("Brouwer met deze naam bestaat al.");
+            }
+
             brewerRepository.create(em, brewer); // BaseRepository doet transacties
             logger.info("Brouwer opgeslagen: {}", brewer.getName());
             return null;

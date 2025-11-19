@@ -1,6 +1,10 @@
 package model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+
+import java.util.Objects;
 
 @Entity
 @Table(name = "beers")
@@ -9,8 +13,13 @@ public class Beer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @NotBlank
     private String name;
+
+    @Positive
     private double alcoholPercentage;
+
+    @Positive
     private double price;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -79,6 +88,20 @@ public class Beer {
     public void setCategory(Category category) {
         this.category = category;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Beer)) return false;
+        Beer beer = (Beer) o;
+        return Objects.equals(id, beer.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
 
     @Override
     public String toString() {
