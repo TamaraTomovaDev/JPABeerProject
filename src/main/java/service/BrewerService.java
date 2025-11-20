@@ -39,7 +39,8 @@ public class BrewerService {
                 throw new IllegalArgumentException("Brouwer met deze naam bestaat al.");
             }
 
-            brewerRepository.create(em, brewer); // BaseRepository doet transacties
+            brewerRepository.create(em, brewer);
+            exportBrewersToJson();
             logger.debug("Brouwer opgeslagen: {}", brewer.getName());
             return null;
         });
@@ -76,7 +77,8 @@ public class BrewerService {
                 throw new IllegalArgumentException("Brouwer met id " + brewer.getId() + " niet gevonden.");
             }
 
-            brewerRepository.update(em, brewer); // BaseRepository doet transacties
+            brewerRepository.update(em, brewer);
+            exportBrewersToJson();
             logger.debug("Brouwer geüpdatet: {}", brewer.getName());
             return null;
         });
@@ -94,7 +96,8 @@ public class BrewerService {
                 throw new IllegalArgumentException("Kan brouwer niet verwijderen zolang er bieren aan gekoppeld zijn.");
             }
 
-            brewerRepository.delete(em, id); // BaseRepository doet transacties
+            brewerRepository.delete(em, id);
+            exportBrewersToJson();
             logger.debug("Brouwer verwijderd: {}", brewer.getName());
             return null;
         });

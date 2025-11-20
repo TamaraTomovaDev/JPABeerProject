@@ -35,7 +35,8 @@ public class CategoryService {
         validateCategory(category);
 
         JpaExecutor.executeWrite(em -> {
-            categoryRepository.create(em, category); // BaseRepository doet transacties
+            categoryRepository.create(em, category);
+            exportCategoriesToJson();
             logger.debug("Categorie opgeslagen: {}", category.getName());
             return null;
         });
@@ -67,7 +68,8 @@ public class CategoryService {
             if (existing == null) {
                 throw new IllegalArgumentException("Categorie met id " + category.getId() + " niet gevonden.");
             }
-            categoryRepository.update(em, category); // BaseRepository doet transacties
+            categoryRepository.update(em, category);
+            exportCategoriesToJson();
             logger.debug("Categorie geüpdatet: {}", category.getName());
             return null;
         });
@@ -84,7 +86,8 @@ public class CategoryService {
             if (category.getBeers() != null && !category.getBeers().isEmpty()) {
                 throw new IllegalArgumentException("Kan categorie niet verwijderen zolang er bieren aan gekoppeld zijn.");
             }
-            categoryRepository.delete(em, id); // BaseRepository doet transacties
+            categoryRepository.delete(em, id);
+            exportCategoriesToJson();
             logger.debug("Categorie verwijderd: {}", category.getName());
             return null;
         });
