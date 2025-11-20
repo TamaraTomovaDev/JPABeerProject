@@ -15,12 +15,13 @@ import util.JpaExecutor;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
 public class BeerService {
     private static final Logger logger = LoggerFactory.getLogger(BeerService.class);
-    private static final String DEFAULT_JSON_PATH = ConfigUtil.getProperty("json.path");
+    private static final String BEERS_JSON_PATH = ConfigUtil.getProperty("beers.json.path");
 
     private final BeerRepository beerRepository = new BeerRepository();
     private final CategoryRepository categoryRepository = new CategoryRepository();
@@ -63,7 +64,7 @@ public class BeerService {
             }
 
             beerRepository.create(em, beer);
-            logger.info("Bier opgeslagen: {}", beer.getName());
+            logger.debug("Bier opgeslagen: {}", beer.getName());
             return null;
         });
     }
@@ -94,7 +95,7 @@ public class BeerService {
             }
 
             beerRepository.update(em, beer);
-            logger.info("Bier geüpdatet: {}", beer.getName());
+            logger.debug("Bier geüpdatet: {}", beer.getName());
             return null;
         });
     }
@@ -107,7 +108,7 @@ public class BeerService {
                 throw new IllegalArgumentException("Bier met id " + id + " niet gevonden");
             }
             beerRepository.delete(em, id); // BaseRepository doet transacties
-            logger.info("Beer deleted: {}", id);
+            logger.debug("Beer deleted: {}", id);
             return null;
         });
     }
@@ -127,33 +128,13 @@ public class BeerService {
         return JpaExecutor.executeRead(em -> beerRepository.findBeersCheaperThan(em, maxPrice));
     }
 
-
-    // Export naar JSON
-    public void exportBeersToJson() {
-        exportBeersToJson(DEFAULT_JSON_PATH);
-    }
-
-    public void exportBeersToJson(String filePath) {
-        List<Beer> beers = findAllBeers();
-        List<BeerDTO> beerDTOs = BeerDTO.fromEntityList(beers);
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            mapper.writerWithDefaultPrettyPrinter().writeValue(new File(filePath), beerDTOs);
-            logger.info("Exported {} beers to JSON file: {}", beerDTOs.size(), filePath);
-        } catch (IOException e) {
-            throw new RuntimeException("Error exporting beers to JSON", e);
-        }
-    }
-
-    // Import vanuit JSON
+    // Import naar JSON
     public void importBeersFromJson() {
-        importBeersFromJson(DEFAULT_JSON_PATH);
-    }
-
-    public void importBeersFromJson(String filePath) {
         ObjectMapper mapper = new ObjectMapper();
-        try {
-            BeerDTO[] beerDTOs = mapper.readValue(new File(filePath), BeerDTO[].class);
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(BEERS_JSON_PATH)) {
+            if (inputStream == null) throw new RuntimeException("beers.json niet gevonden!");
+            BeerDTO[] beerDTOs = mapper.readValue(inputStream, BeerDTO[].class);
+
             JpaExecutor.executeWrite(em -> {
                 List<Brewer> brewers = brewerRepository.findAll(em);
                 List<Category> categories = categoryRepository.findAll(em);
@@ -162,8 +143,31 @@ public class BeerService {
                 beerRepository.batchInsert(em, beers, 20);
                 return null;
             });
+
+            logger.info("Imported {} beers from JSON", beerDTOs.length);
         } catch (IOException e) {
+            logger.error("Error importing beers from JSON", e);
             throw new RuntimeException("Error importing beers from JSON", e);
+        }
+    }
+
+    // Export naar JSON
+    public void exportBeersToJson() {
+        exportBeersToJson(BEERS_JSON_PATH);
+    }
+
+    public void exportBeersToJson(String filePath) {
+        List<Beer> beers = findAllBeers();
+        List<BeerDTO> beerDTOs = BeerDTO.fromEntityList(beers);
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            File file = new File(filePath);
+            file.getParentFile().mkdirs();
+            mapper.writerWithDefaultPrettyPrinter().writeValue(file, beerDTOs);
+            logger.info("Exported {} beers to JSON file: {}", beerDTOs.size(), filePath);
+        } catch (IOException e) {
+            logger.error("Error exporting beers to JSON", e);
+            throw new RuntimeException("Error exporting beers to JSON", e);
         }
     }
 }

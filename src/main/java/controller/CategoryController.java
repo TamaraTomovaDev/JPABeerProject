@@ -8,7 +8,7 @@ import java.util.List;
 
 public class CategoryController {
     private final CategoryService categoryService = new CategoryService();
-    private final InputUtil inputUtil;  // <- voeg toe
+    private final InputUtil inputUtil;
 
     // Constructor
     public CategoryController(InputUtil inputUtil) {
@@ -80,5 +80,23 @@ public class CategoryController {
         String name = inputUtil.readString("Naam categorie: ");
         Category category = categoryService.findCategoryByName(name);
         System.out.println(category != null ? category : "Geen categorie gevonden met naam " + name);
+    }
+
+    public void importCategories() {
+        try {
+            categoryService.importCategoriesFromJson();
+            System.out.println("Categorieën geïmporteerd uit JSON.");
+        } catch (Exception e) {
+            System.out.println("Fout bij importeren: " + e.getMessage());
+        }
+    }
+
+    public void exportCategories() {
+        try {
+            categoryService.exportCategoriesToJson();
+            System.out.println("Categorieën geëxporteerd naar JSON.");
+        } catch (Exception e) {
+            System.out.println("Fout bij exporteren: " + e.getMessage());
+        }
     }
 }

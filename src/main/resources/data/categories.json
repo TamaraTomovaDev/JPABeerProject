@@ -1,0 +1,5 @@
+[
+  { "name": "Pils", "description": "Licht bier" },
+  { "name": "Blond", "description": "Blond bier" },
+  { "name": "Trappist", "description": "Sterk bier" }
+]

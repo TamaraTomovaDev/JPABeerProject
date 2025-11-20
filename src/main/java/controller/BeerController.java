@@ -12,7 +12,6 @@ public class BeerController {
     private final BeerService beerService = new BeerService();
     private final InputUtil inputUtil;
 
-    // Constructor
     public BeerController(InputUtil inputUtil) {
         this.inputUtil = inputUtil;
     }
@@ -98,11 +97,22 @@ public class BeerController {
         }
     }
 
-    public void exportBeers() {
-        beerService.exportBeersToJson();
-    }
 
     public void importBeers() {
-        beerService.importBeersFromJson();
+        try {
+            beerService.importBeersFromJson();
+            System.out.println("Bieren succesvol geïmporteerd uit JSON-bestand.");
+        } catch (Exception e) {
+            System.out.println("Fout bij importeren: " + e.getMessage());
+        }
+    }
+
+    public void exportBeers() {
+        try {
+            beerService.exportBeersToJson();
+            System.out.println("Bieren succesvol geëxporteerd naar JSON-bestand.");
+        } catch (Exception e) {
+            System.out.println("Fout bij exporteren: " + e.getMessage());
+        }
     }
 }

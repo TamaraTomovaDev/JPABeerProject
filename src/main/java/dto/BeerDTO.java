@@ -25,9 +25,7 @@ public class BeerDTO {
         this.categoryId = categoryId;
     }
 
-    /**
-     * ✅ Zet Beer naar BeerDTO
-     */
+    // Zet Beer naar BeerDTO
     public static BeerDTO fromEntity(Beer beer) {
         return new BeerDTO(
                 beer.getName(),
@@ -38,25 +36,20 @@ public class BeerDTO {
         );
     }
 
-    /**
-     * ✅ Zet lijst van Beer naar lijst van BeerDTO
-     */
+    // Zet lijst van Beer naar lijst van BeerDTO
     public static List<BeerDTO> fromEntityList(List<Beer> beers) {
         return beers.stream()
                 .map(BeerDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * ✅ Zet BeerDTO naar Beer (met Brewer en Category)
-     */
+    // Zet BeerDTO naar Beer (met Brewer en Category)
     public Beer toEntity(Brewer brewer, Category category) {
         return new Beer(name, alcoholPercentage, price, brewer, category);
     }
 
-    /**
-     * ✅ Zet lijst van BeerDTO naar lijst van Beer
-     */
+    // Zet lijst van BeerDTO naar lijst van Beer
+
     public static List<Beer> toEntityList(List<BeerDTO> dtoList, List<Brewer> brewers, List<Category> categories) {
         return dtoList.stream()
                 .map(dto -> {
@@ -75,7 +68,7 @@ public class BeerDTO {
                 .collect(Collectors.toList());
     }
 
-    // ✅ Getters en setters
+    // Getters en setters
     public String getName() {
         return name;
     }

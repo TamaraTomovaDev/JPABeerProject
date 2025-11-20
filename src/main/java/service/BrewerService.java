@@ -1,15 +1,23 @@
 package service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dto.BrewerDTO;
 import model.Brewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import repository.BrewerRepository;
+import util.ConfigUtil;
 import util.JpaExecutor;
+import java.io.File;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 
 public class BrewerService {
     private static final Logger logger = LoggerFactory.getLogger(BrewerService.class);
+    private static final String BREWERS_JSON_PATH = ConfigUtil.getProperty("brewers.json.path");
     private final BrewerRepository brewerRepository = new BrewerRepository();
 
     // Validatie voor Brewer-object
@@ -32,7 +40,7 @@ public class BrewerService {
             }
 
             brewerRepository.create(em, brewer); // BaseRepository doet transacties
-            logger.info("Brouwer opgeslagen: {}", brewer.getName());
+            logger.debug("Brouwer opgeslagen: {}", brewer.getName());
             return null;
         });
     }
@@ -69,7 +77,7 @@ public class BrewerService {
             }
 
             brewerRepository.update(em, brewer); // BaseRepository doet transacties
-            logger.info("Brouwer geüpdatet: {}", brewer.getName());
+            logger.debug("Brouwer geüpdatet: {}", brewer.getName());
             return null;
         });
     }
@@ -87,7 +95,7 @@ public class BrewerService {
             }
 
             brewerRepository.delete(em, id); // BaseRepository doet transacties
-            logger.info("Brouwer verwijderd: {}", brewer.getName());
+            logger.debug("Brouwer verwijderd: {}", brewer.getName());
             return null;
         });
     }
@@ -113,4 +121,40 @@ public class BrewerService {
         return JpaExecutor.executeRead(em -> brewerRepository.findBrewerWithBeerCount(em));
     }
 
+
+    public void importBrewersFromJson() {
+        ObjectMapper mapper = new ObjectMapper();
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(BREWERS_JSON_PATH)) {
+            if (inputStream == null) throw new RuntimeException("brewers.json niet gevonden!");
+            BrewerDTO[] brewerDTOs = mapper.readValue(inputStream, BrewerDTO[].class);
+            JpaExecutor.executeWrite(em -> {
+                List<Brewer> brewers = BrewerDTO.toEntityList(Arrays.asList(brewerDTOs));
+                brewers.forEach(b -> brewerRepository.create(em, b));
+                return null;
+            });
+            logger.info("Imported {} brewers from JSON", brewerDTOs.length);
+        } catch (IOException e) {
+            logger.error("Error importing brewers from JSON", e);
+            throw new RuntimeException("Error importing brewers from JSON", e);
+        }
+    }
+
+    public void exportBrewersToJson() {
+        exportBrewersToJson(BREWERS_JSON_PATH);
+    }
+
+    public void exportBrewersToJson(String filePath) {
+        List<Brewer> brewers = findAllBrewers();
+        List<BrewerDTO> brewerDTOs = BrewerDTO.fromEntityList(brewers);
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            File file = new File(filePath);
+            file.getParentFile().mkdirs();
+            mapper.writerWithDefaultPrettyPrinter().writeValue(file, brewerDTOs);
+            logger.info("Exported {} brewers to JSON file: {}", brewerDTOs.size(), filePath);
+        } catch (IOException e) {
+            logger.error("Error exporting brewers to JSON", e);
+            throw new RuntimeException("Error exporting brewers to JSON", e);
+        }
+    }
 }

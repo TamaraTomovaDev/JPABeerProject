@@ -1,8 +1,10 @@
 package model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "brewers")
@@ -10,9 +12,11 @@ public class Brewer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    private String name;
-    private String location;
 
+    @NotBlank
+    private String name;
+
+    private String location;
 
     @OneToMany(mappedBy = "brewer")
     private List<Beer> beers;
@@ -28,6 +32,11 @@ public class Brewer {
         this.name = name;
         this.location = location;
         this.beers = beers;
+    }
+
+    public Brewer(String name, String location) {
+        this.name = name;
+        this.location = location;
     }
 
     public int getId() {
@@ -61,6 +70,20 @@ public class Brewer {
     public void setBeers(List<Beer> beers) {
         this.beers = beers;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Brewer)) return false;
+        Brewer brewer = (Brewer) o;
+        return id == brewer.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
 
     @Override
     public String toString() {

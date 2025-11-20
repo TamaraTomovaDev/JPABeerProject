@@ -23,10 +23,13 @@ public class MainApp {
         BrewerMenu brewerMenu = new BrewerMenu(brewerController, inputUtil);
         CategoryMenu categoryMenu = new CategoryMenu(categoryController, inputUtil);
 
+        brewerController.importBrewers();
+        categoryController.importCategories();
         beerController.importBeers();
 
+
         while (true) {
-            System.out.println("Menu");
+            System.out.println("---- Menu ----");
             System.out.println("1. Manage Brewers");
             System.out.println("2. Manage Beers");
             System.out.println("3. Manage Categories");
@@ -39,6 +42,8 @@ public class MainApp {
                 case 2 -> beerMenu.showMenu();
                 case 3 -> categoryMenu.showMenu();
                 case 0 -> {
+                    brewerController.exportBrewers();
+                    categoryController.exportCategories();
                     beerController.exportBeers();
                     System.out.println("Programma afgesloten. Tot ziens!");
                     return;

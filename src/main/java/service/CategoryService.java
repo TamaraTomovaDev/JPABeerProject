@@ -1,15 +1,23 @@
 package service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dto.CategoryDTO;
 import model.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import repository.CategoryRepository;
+import util.ConfigUtil;
 import util.JpaExecutor;
+import java.io.File;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 
 public class CategoryService {
     private static final Logger logger = LoggerFactory.getLogger(CategoryService.class);
+    private static final String CATEGORIES_JSON_PATH = ConfigUtil.getProperty("categories.json.path");
     private final CategoryRepository categoryRepository = new CategoryRepository();
 
     // Validatie voor Category-object
@@ -28,7 +36,7 @@ public class CategoryService {
 
         JpaExecutor.executeWrite(em -> {
             categoryRepository.create(em, category); // BaseRepository doet transacties
-            logger.info("Categorie opgeslagen: {}", category.getName());
+            logger.debug("Categorie opgeslagen: {}", category.getName());
             return null;
         });
     }
@@ -60,7 +68,7 @@ public class CategoryService {
                 throw new IllegalArgumentException("Categorie met id " + category.getId() + " niet gevonden.");
             }
             categoryRepository.update(em, category); // BaseRepository doet transacties
-            logger.info("Categorie geüpdatet: {}", category.getName());
+            logger.debug("Categorie geüpdatet: {}", category.getName());
             return null;
         });
     }
@@ -77,7 +85,7 @@ public class CategoryService {
                 throw new IllegalArgumentException("Kan categorie niet verwijderen zolang er bieren aan gekoppeld zijn.");
             }
             categoryRepository.delete(em, id); // BaseRepository doet transacties
-            logger.info("Categorie verwijderd: {}", category.getName());
+            logger.debug("Categorie verwijderd: {}", category.getName());
             return null;
         });
     }
@@ -85,5 +93,43 @@ public class CategoryService {
     // Zoekt een categorie op naam
     public Category findCategoryByName(String name) {
         return JpaExecutor.executeRead(em -> categoryRepository.findCategoryByName(em, name));
+    }
+
+    // Import naar JSON
+    public void importCategoriesFromJson() {
+        ObjectMapper mapper = new ObjectMapper();
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(CATEGORIES_JSON_PATH)) {
+            if (inputStream == null) throw new RuntimeException("categories.json niet gevonden!");
+            CategoryDTO[] categoryDTOs = mapper.readValue(inputStream, CategoryDTO[].class);
+            JpaExecutor.executeWrite(em -> {
+                List<Category> categories = CategoryDTO.toEntityList(Arrays.asList(categoryDTOs));
+                categories.forEach(c -> categoryRepository.create(em, c));
+                return null;
+            });
+            logger.info("Imported {} categories from JSON", categoryDTOs.length);
+        } catch (IOException e) {
+            logger.error("Error importing categories from JSON", e);
+            throw new RuntimeException("Error importing categories from JSON", e);
+        }
+    }
+
+    // Export naar JSON
+    public void exportCategoriesToJson() {
+        exportCategoriesToJson(CATEGORIES_JSON_PATH);
+    }
+
+    public void exportCategoriesToJson(String filePath) {
+        List<Category> categories = findAllCategories();
+        List<CategoryDTO> categoryDTOs = CategoryDTO.fromEntityList(categories);
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            File file = new File(filePath);
+            file.getParentFile().mkdirs();
+            mapper.writerWithDefaultPrettyPrinter().writeValue(file, categoryDTOs);
+            logger.info("Exported {} categories to JSON file: {}", categoryDTOs.size(), filePath);
+        } catch (IOException e) {
+            logger.error("Error exporting categories to JSON", e);
+            throw new RuntimeException("Error exporting categories to JSON", e);
+        }
     }
 }

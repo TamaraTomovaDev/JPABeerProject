@@ -8,9 +8,8 @@ import java.util.List;
 
 public class BrewerController {
     private final BrewerService brewerService = new BrewerService();
-    private final InputUtil inputUtil;  // <- voeg toe
+    private final InputUtil inputUtil;
 
-    // Constructor
     public BrewerController(InputUtil inputUtil) {
         this.inputUtil = inputUtil;
     }
@@ -85,5 +84,23 @@ public class BrewerController {
     public void viewBrewersWithBeerCount() {
         List<Object[]> results = brewerService.findAllBrewersWithBeerCount();
         results.forEach(row -> System.out.println(row[0] + " - " + row[1] + " bieren"));
+    }
+
+    public void importBrewers() {
+        try {
+            brewerService.importBrewersFromJson();
+            System.out.println("Brewers geïmporteerd uit JSON.");
+        } catch (Exception e) {
+            System.out.println("Fout bij importeren: " + e.getMessage());
+        }
+    }
+
+    public void exportBrewers() {
+        try {
+            brewerService.exportBrewersToJson();
+            System.out.println("Brewers geëxporteerd naar JSON.");
+        } catch (Exception e) {
+            System.out.println("Fout bij exporteren: " + e.getMessage());
+        }
     }
 }

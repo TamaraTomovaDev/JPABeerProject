@@ -1,7 +1,10 @@
 package model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "categories")
@@ -10,7 +13,9 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @NotBlank
     private String name;
+
     private String description;
 
     @OneToMany(mappedBy = "category")
@@ -27,6 +32,11 @@ public class Category {
         this.name = name;
         this.description = description;
         this.beers = beers;
+    }
+
+    public Category(String name, String description) {
+        this.name = name;
+        this.description = description;
     }
 
     public int getId() {
@@ -62,6 +72,18 @@ public class Category {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Category)) return false;
+        Category category = (Category) o;
+        return id == category.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
     public String toString() {
         return "Category{" +
                 "id=" + id +
@@ -69,5 +91,5 @@ public class Category {
                 ", description='" + description + '\'' +
                 ", beersCount=" + (beers != null ? beers.size() : 0) +
                 '}';
+        }
     }
-}
