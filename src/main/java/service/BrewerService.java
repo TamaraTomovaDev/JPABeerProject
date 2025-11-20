@@ -40,7 +40,6 @@ public class BrewerService {
             }
 
             brewerRepository.create(em, brewer);
-            exportBrewersToJson();
             logger.debug("Brouwer opgeslagen: {}", brewer.getName());
             return null;
         });
@@ -78,7 +77,6 @@ public class BrewerService {
             }
 
             brewerRepository.update(em, brewer);
-            exportBrewersToJson();
             logger.debug("Brouwer geüpdatet: {}", brewer.getName());
             return null;
         });
@@ -97,7 +95,6 @@ public class BrewerService {
             }
 
             brewerRepository.delete(em, id);
-            exportBrewersToJson();
             logger.debug("Brouwer verwijderd: {}", brewer.getName());
             return null;
         });

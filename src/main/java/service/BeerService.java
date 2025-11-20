@@ -64,7 +64,6 @@ public class BeerService {
             }
 
             beerRepository.create(em, beer);
-            exportBeersToJson();
             logger.debug("Bier opgeslagen: {}", beer.getName());
             return null;
         });
@@ -96,7 +95,6 @@ public class BeerService {
             }
 
             beerRepository.update(em, beer);
-            exportBeersToJson();
             logger.debug("Bier geüpdatet: {}", beer.getName());
             return null;
         });
@@ -110,7 +108,6 @@ public class BeerService {
                 throw new IllegalArgumentException("Bier met id " + id + " niet gevonden");
             }
             beerRepository.delete(em, id);
-            exportBeersToJson();
             logger.debug("Beer deleted: {}", id);
             return null;
         });

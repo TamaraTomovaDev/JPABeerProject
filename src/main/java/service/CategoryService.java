@@ -36,7 +36,6 @@ public class CategoryService {
 
         JpaExecutor.executeWrite(em -> {
             categoryRepository.create(em, category);
-            exportCategoriesToJson();
             logger.debug("Categorie opgeslagen: {}", category.getName());
             return null;
         });
@@ -69,7 +68,6 @@ public class CategoryService {
                 throw new IllegalArgumentException("Categorie met id " + category.getId() + " niet gevonden.");
             }
             categoryRepository.update(em, category);
-            exportCategoriesToJson();
             logger.debug("Categorie geüpdatet: {}", category.getName());
             return null;
         });
@@ -87,7 +85,6 @@ public class CategoryService {
                 throw new IllegalArgumentException("Kan categorie niet verwijderen zolang er bieren aan gekoppeld zijn.");
             }
             categoryRepository.delete(em, id);
-            exportCategoriesToJson();
             logger.debug("Categorie verwijderd: {}", category.getName());
             return null;
         });

@@ -29,6 +29,7 @@ public class MainApp {
 
 
         while (true) {
+            System.out.println("---- Beer Brewery Management System ----");
             System.out.println("---- Menu ----");
             System.out.println("1. Manage Brewers");
             System.out.println("2. Manage Beers");
