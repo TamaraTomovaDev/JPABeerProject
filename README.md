@@ -1,6 +1,6 @@
 # 🍺 Beer Brewery Management System
 
-**Technologieën:** Java, JPA/Hibernate, MySQL (H2 optioneel), Jackson, SLF4J, JUnit 5
+**Technologieën:** Java 17, JPA/Hibernate, MySQL (H2 optioneel), Jackson, SLF4J, JUnit 5
 **Domein:** Beheer van bieren, brouwers en categorieën
 
 ---
@@ -71,7 +71,7 @@ Gebruikers kunnen bieren, brouwers en categorieën beheren via een overzichtelij
 
 ## Technologieën
 
-* Java
+* Java 17
 * JPA / Hibernate
 * MySQL (H2 optioneel)
 * Jackson voor JSON
